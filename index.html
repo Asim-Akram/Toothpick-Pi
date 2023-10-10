@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, maximum-scale=0.8, user-scalable=0">
+    <meta charset="UTF-8">
+    <title>Toothpick Dropper</title>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <div id="content">
+        <h1>Toothpick Dropper</h1>
+        <br>
+        <label for="pwidth">Enter plank width </label>
+        <input id="pwidth" type="text">
+        <br><br>
+        <canvas id="myCanvas" width="600" height="600"></canvas>
+        <br><br>
+        <button id="b1">Drop 1</button>
+        <button id="b2">Drop 10</button>
+        <button id="b3">Drop 100</button>
+        <button id="b4">Drop 1000</button>
+        <button id="b5">Drop 10000</button>
+        <br><br>
+        <h2>Probability</h2>
+        <h3 id="prob">0</h3>
+    </div>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const probability = document.getElementById("prob");
+        var pWidthInput = document.getElementById("pwidth");
+        var toothpickCount = 0;
+        var intersecting = 0;
+        pWidthInput.value = 100;
+        
+        function initiate(plankWidth){
+            drawFloor(plankWidth);
+            toothpickCount = 0;
+            intersecting = 0;
+        }
+
+        function drawFloor(plankWidth){
+            ctx.fillStyle = 'brown';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = "black";
+            for(i = 0; i < canvas.width; i += plankWidth){
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(
+                resolve => setTimeout(resolve, ms)
+            );
+        }
+
+        async function drawToothpick(count, length){
+            for(let i=0; i< count; i++){
+                const x = Math.floor(Math.random() * (canvas.width - length*2) + length);
+                const y = Math.floor(Math.random() * (canvas.height - length*2) + length);
+                const angle = (Math.random() * 360 * Math.PI) / 180;
+                const x2 = x + length * Math.cos(angle);
+                const y2 = y + length * Math.sin(angle);
+                var strk = x + (length * 2);
+                strk /= (length * 2);
+                strk = Math.floor(strk);
+                strk *= (length * 2);
+                if((strk >= x && strk <= x2) || ((strk-2*length) >= x2 && (strk-2*length) <= x)){
+                    console.log(x, strk, x2);
+                    ctx.strokeStyle = 'green';
+                    intersecting++;
+                }
+                else {
+                    console.log(x, strk, x2);
+                    ctx.strokeStyle = 'yellow';
+                }
+                ctx.beginPath();
+                ctx.moveTo(x,y);
+                ctx.lineTo(x2,y2);  
+                ctx.stroke();
+                toothpickCount++;
+                probability.innerHTML = (intersecting / toothpickCount * 10).toFixed(5);
+                if(count < 2000)
+                    await sleep(1);
+            }
+        }
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function () {
+                const count = Math.pow(10, parseInt(button.getAttribute('id')[1]) - 1);
+                drawToothpick(count, pWidthInput.value / 2);
+            });
+        });
+
+        pWidthInput.addEventListener("change", function(){
+            var pWidth = parseInt(pWidthInput.value);
+            initiate(pWidth);
+        });
+
+        initiate(100);
+    </script>
+</body>
+</html>
